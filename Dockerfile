@@ -72,7 +72,7 @@ RUN wget -O models/loras/ultra_realistic_v1.safetensors https://civitai.com/api/
 RUN wget -O models/loras/phlux.safetensors https://civitai.com/api/download/models/753339?type=Model&format=SafeTensor
 RUN wget -O models/loras/iphone_photo_v2_15000s.safetensors https://civitai.com/api/download/models/967140?type=Model&format=SafeTensor
 # temporary link for amateur_v6
-RUN wget -O models/loras/amateur_v6.safetensors https://l.station307.com/MXnFRYLmyJ595Cw2DvzUSK/amateurphoto-v6-forcu.safetensors
+RUN wget -O models/loras/amateur_v6.safetensors https://l.station307.com/4oWYVDb5vJUh1C9T5xeyzo/amateurphoto-v6-forcu.safetensors
 
 # Download checkpoints/vae/LoRA to include in image based on model type
 RUN wget -O models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
