@@ -28,6 +28,7 @@ COPY requirements.txt /requirements.txt
 COPY runpod-1.7.8-CUSTOM.tar.gz /runpod.tar.gz
 
 # Install requirements, runpod, and comfy-cli
+RUN pip install --upgrade pip setuptools wheel
 RUN pip install /runpod.tar.gz
 RUN pip install comfy-cli
 
