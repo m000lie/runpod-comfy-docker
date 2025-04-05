@@ -23,11 +23,12 @@ RUN apt-get update && apt-get install -y \
 # Clean up to reduce image size
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements file first
+# Copy requirements file and runpod package
 COPY requirements.txt /requirements.txt
+COPY runpod-1.7.8-CUSTOM.tar.gz /runpod.tar.gz
 
-# Install requirements and comfy-cli
-RUN pip install -r /requirements.txt
+# Install requirements, runpod, and comfy-cli
+RUN pip install /runpod.tar.gz
 RUN pip install comfy-cli
 
 # Install ComfyUI
