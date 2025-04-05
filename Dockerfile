@@ -24,7 +24,6 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file and runpod package
-COPY requirements.txt /requirements.txt
 COPY runpod-1.7.8-CUSTOM.tar.gz /runpod.tar.gz
 
 # Install requirements, runpod, and comfy-cli
@@ -40,7 +39,7 @@ WORKDIR /comfyui
 
 # Install CUSTOM runpod & requests
 RUN pip install requests
-RUN pip install -r requirements.txt
+
 
 # Support for the network volume
 ADD src/extra_model_paths.yaml ./
@@ -78,7 +77,7 @@ RUN wget -O models/loras/ultra_realistic_v1.safetensors https://civitai.com/api/
 RUN wget -O models/loras/phlux.safetensors https://civitai.com/api/download/models/753339?type=Model&format=SafeTensor
 RUN wget -O models/loras/iphone_photo_v2_15000s.safetensors https://civitai.com/api/download/models/967140?type=Model&format=SafeTensor
 # temporary link for amateur_v6
-RUN wget -O models/loras/amateur_v6.safetensors https://l.station307.com/4oWYVDb5vJUh1C9T5xeyzo/amateurphoto-v6-forcu.safetensors
+RUN wget -O models/loras/amateur_v6.safetensors https://l.station307.com/HuM1PeuGwoPJ8vbD6H9YLj/amateurphoto-v6-forcu.safetensors
 
 # Download checkpoints/vae/LoRA to include in image based on model type
 RUN wget -O models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
