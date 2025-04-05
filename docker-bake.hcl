@@ -11,8 +11,8 @@ group "default" {
 }
 
 target "main" {
-  context = "/"
-  dockerfile = "home/box/runpod-comfy-docker/Dockerfile"
+  context = "."
+  dockerfile = "Dockerfile"
   platforms = ["linux/amd64"]
   tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:latest"]
 }
