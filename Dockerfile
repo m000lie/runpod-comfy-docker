@@ -1,5 +1,5 @@
 # Stage 1: Base image with common dependencies
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -37,9 +37,27 @@ RUN /usr/bin/yes | comfy --workspace /comfyui install --cuda-version 11.8 --nvid
 # Change working directory to ComfyUI
 WORKDIR /comfyui
 
+# Create models directory structure
+RUN mkdir -p models/vae models/unet models/text_encoders models/clip_vision models/checkpoints models/loras
+
+# Copy local model files
+COPY /media/box/extra/models/loras/Another_Amateur_Lora.safetensors models/loras/ultra_realistic_v1.safetensors
+COPY /media/box/extra/models/loras/Phlux.safetensors models/loras/phlux.safetensors
+COPY /media/box/extra/models/loras/iphone-photo-V2-15000s.safetensors models/loras/iphone_photo_v2_15000s.safetensors
+COPY /media/box/extra/models/loras/amateurphoto-v6-forcu.safetensors models/loras/amateur_v6.safetensors
+COPY /media/box/extra/models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
+COPY /media/box/extra/models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
+COPY /media/box/extra/models/clip_vision/clip_vision_h.safetensors models/clip_vision/clip_vision_h.safetensors
+COPY /media/box/extra/models/vae/wan_2.1_vae.safetensors models/vae/wan_2.1_vae.safetensors
+COPY /media/box/extra/models/text_encoders/t5/t5xxl_fp16.safetensors models/text_encoders/t5xxl_fp16.safetensors
+COPY /media/box/extra/models/text_encoders/clip_l.safetensors models/text_encoders/clip_l.safetensors
+COPY /media/box/extra/models/unet/flux1-dev.safetensors models/unet/flux1-dev.safetensors
+COPY /media/box/extra/models/vae/flux-ae.safetensors models/vae/flux-ae.safetensors
+COPY /media/box/extra/models/text_encoders/t5/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
+COPY /media/box/extra/models/unet/flux1-dev-fp8.safetensors models/unet/flux1-dev-fp8.safetensors
+
 # Install CUSTOM runpod & requests
 RUN pip install requests
-
 
 # Support for the network volume
 ADD src/extra_model_paths.yaml ./
@@ -56,48 +74,6 @@ ADD *snapshot*.json /
 
 # Restore the snapshot to install custom nodes
 RUN /restore_snapshot.sh
-
-# Start container
-CMD ["/start.sh"]
-
-# Stage 2: Download models
-FROM base as downloader
-
-# ARG HUGGINGFACE_ACCESS_TOKEN
-# ARG MODEL_TYPE
-
-# Change working directory to ComfyUI
-WORKDIR /comfyui
-
-# Create necessary directories
-RUN mkdir -p models/vae models/unet models/text_encoders models/clip_vision models/checkpoints models/loras
-
-# Copy local LORA files
-RUN wget -O models/loras/ultra_realistic_v1.safetensors https://civitai.com/api/download/models/890545?type=Model&format=SafeTensor
-RUN wget -O models/loras/phlux.safetensors https://civitai.com/api/download/models/753339?type=Model&format=SafeTensor
-RUN wget -O models/loras/iphone_photo_v2_15000s.safetensors https://civitai.com/api/download/models/967140?type=Model&format=SafeTensor
-# temporary link for amateur_v6
-RUN wget -O models/loras/amateur_v6.safetensors https://l.station307.com/HuM1PeuGwoPJ8vbD6H9YLj/amateurphoto-v6-forcu.safetensors
-
-# Download checkpoints/vae/LoRA to include in image based on model type
-RUN wget -O models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
-RUN wget -O models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
-RUN wget -O models/clip_vision/clip_vision_h.safetensors https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors
-RUN wget -O models/vae/wan_2.1_vae.safetensors https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors
-# RUN wget -O models/checkpoints/RealVisXL_V5.0_Lightning_fp32.safetensors https://huggingface.co/SG161222/RealVisXL_V5.0_Lightning/resolve/main/RealVisXL_V5.0_Lightning_fp32.safetensors
-# files for inference fp16
-RUN wget -O models/text_encoders/t5xxl_fp16.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors
-RUN wget -O models/text_encoders/clip_l.safetensors https://huggingface.co/Comfy-Org/stable-diffusion-3.5-fp8/resolve/main/text_encoders/clip_l.safetensors
-RUN wget -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors
-RUN wget -O models/vae/flux-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors 
-# files for training lora fp8
-RUN wget -O models/text_encoders/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors
-RUN wget -O models/unet/flux1-dev-fp8-e4m3fn.safetensors https://huggingface.co/Kijai/flux-fp8/resolve/main/flux1-dev-fp8-e4m3fn.safetensors
-# Stage 3: Final image
-FROM base as final
-
-# Copy models from stage 2 to the final image
-COPY --from=downloader /comfyui/models /comfyui/models
 
 # Start container
 CMD ["/start.sh"]

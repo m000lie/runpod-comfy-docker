@@ -259,6 +259,13 @@ def process_output_images(outputs, job_id, bucket_name):
             print(
                 "runpod-worker-comfy - the image was generated and uploaded to AWS S3"
             )
+            
+            # Delete the local image file after successful upload to S3
+            try:
+                os.remove(local_image_path)
+                print(f"runpod-worker-comfy - deleted local image file: {local_image_path}")
+            except Exception as e:
+                print(f"runpod-worker-comfy - warning: failed to delete local image file: {str(e)}")
         else:
             # base64 image
             image = base64_encode(local_image_path)
@@ -309,7 +316,7 @@ def handler(job):
         dict: A dictionary containing either an error message or a success status with generated images.
     """
     job_input = job["input"]
-    USER_ID = job["user_id"]
+    SB_USER_ID = job["sb_user_id"]
     lora_name = job.get("lora", "")
 
     # Make sure that the input is valid
@@ -375,10 +382,10 @@ def handler(job):
     # check to see if we trained a lora or generated an image
     if lora_enable:
         lora_name = lora_name + "_rank16_bf16"
-        process_lora(history[prompt_id].get("outputs"), job["id"], lora_name, bucket_name=USER_ID)
+        process_lora(history[prompt_id].get("outputs"), job["id"], lora_name, bucket_name=SB_USER_ID)
     else:
         # Get the generated image and return it as URL in an AWS bucket or as base64
-        images_result = process_output_images(history[prompt_id].get("outputs"), job["id"], bucket_name=USER_ID)
+        images_result = process_output_images(history[prompt_id].get("outputs"), job["id"], bucket_name=SB_USER_ID)
 
     result = {**images_result, "refresh_worker": REFRESH_WORKER}
 

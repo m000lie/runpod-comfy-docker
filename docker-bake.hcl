@@ -6,26 +6,13 @@ variable "DOCKERHUB_IMG" {
   default = "runpod-worker-comfy"
 }
 
-variable "RELEASE_VERSION" {
-  default = "latest"
-}
-
-
 group "default" {
-  targets = ["base", "rp"]
+  targets = ["main"]
 }
 
-target "base" {
-  context = "."
-  dockerfile = "Dockerfile"
-  target = "base"
+target "main" {
+  context = "/"
+  dockerfile = "home/box/runpod-comfy-docker/Dockerfile"
   platforms = ["linux/amd64"]
-  tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-base"]
+  tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:latest"]
 }
-
-target "rp" {
-  target = "final"
-  tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-rp"]
-  inherits = ["base"]
-}
-
