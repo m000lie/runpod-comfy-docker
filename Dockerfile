@@ -23,7 +23,11 @@ RUN apt-get update && apt-get install -y \
 # Clean up to reduce image size
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
-# Install comfy-cli
+# Copy requirements file first
+COPY requirements.txt /requirements.txt
+
+# Install requirements and comfy-cli
+RUN pip install -r /requirements.txt
 RUN pip install comfy-cli
 
 # Install ComfyUI

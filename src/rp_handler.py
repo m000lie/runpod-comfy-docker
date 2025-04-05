@@ -277,7 +277,7 @@ def process_output_images(outputs, job_id, bucket_name):
             "message": f"the image does not exist in the specified output folder: {local_image_path}",
         }
 
-
+# bucket name is the user id
 def process_lora(outputs, job_id, lora_name, bucket_name):
 
     for node_id, node_output in outputs.items():
