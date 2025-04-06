@@ -316,8 +316,10 @@ def handler(job):
         dict: A dictionary containing either an error message or a success status with generated images.
     """
     job_input = job["input"]
-    SB_USER_ID = job_input["sb_user_id"]
-    lora_name = job_input.get("lora", "")
+    SB_USER_ID = job_input.get("sb_user_id", False)
+    if not SB_USER_ID:
+        return {"error": "NO USER ID FOUND"}
+    lora_name = job_input.get("lora", False)
 
     # Make sure that the input is valid
     validated_data, error_message = validate_input(job_input)
