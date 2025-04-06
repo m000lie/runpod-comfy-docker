@@ -25,14 +25,14 @@ RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements file and runpod package
 COPY runpod-1.7.8-CUSTOM.tar.gz /runpod.tar.gz
+COPY requirements.txt /requirements.txt
 
 # Install requirements, runpod, and comfy-cli
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install /runpod.tar.gz
+RUN pip install -r /requirements.txt
 RUN pip install comfy-cli
-RUN pip install accelerate==1.6.0
-RUN pip install opencv-python==4.11.0.86
-RUN pip install matplotlib==3.10.1
+
 # Install ComfyUI
 RUN /usr/bin/yes | comfy --workspace /comfyui install --cuda-version 11.8 --nvidia --version 0.3.26
 

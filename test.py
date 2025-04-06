@@ -1,4 +1,5 @@
 import os
+import cv2
 
 # The caption to write into each .txt file
 caption = "taby the fat stupid cat"
