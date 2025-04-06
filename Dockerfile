@@ -28,6 +28,8 @@ COPY runpod-1.7.8-CUSTOM.tar.gz /runpod.tar.gz
 COPY requirements.txt /requirements.txt
 
 # Install requirements, runpod, and comfy-cli
+# https://stackoverflow.com/questions/62786028/importerror-libgthread-2-0-so-0-cannot-open-shared-object-file-no-such-file-o
+RUN apt-get install -y libglib2.0-0 libsm6 libxrender1 libxext6 # required for opencv 
 RUN pip install --upgrade pip setuptools wheel
 RUN pip install /runpod.tar.gz
 RUN pip install -r /requirements.txt
