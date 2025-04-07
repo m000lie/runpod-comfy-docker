@@ -46,20 +46,20 @@ WORKDIR /comfyui
 RUN mkdir -p models/vae models/unet models/text_encoders models/clip_vision models/checkpoints models/loras
 
 # Copy local model files
-COPY models/loras/Another_Amateur_Lora.safetensors models/loras/ultra_realistic_v1.safetensors
+COPY models/loras/UltraRealistic_Lora_Project.safetensors models/loras/ultra_realistic_v1.safetensors
 COPY models/loras/Phlux.safetensors models/loras/phlux.safetensors
-COPY models/loras/iphone-photo-V2-15000s.safetensors models/loras/iphone_photo_v2_15000s.safetensors
+COPY models/loras/iPhonePhoto2.safetensors models/loras/iPhonePhoto2.safetensors
 COPY models/loras/amateurphoto-v6-forcu.safetensors models/loras/amateur_v6.safetensors
 COPY models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
 COPY models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
 COPY models/clip_vision/clip_vision_h.safetensors models/clip_vision/clip_vision_h.safetensors
 COPY models/vae/wan_2.1_vae.safetensors models/vae/wan_2.1_vae.safetensors
-COPY models/text_encoders/t5/t5xxl_fp16.safetensors models/text_encoders/t5xxl_fp16.safetensors
+COPY models/text_encoders/t5xxl_fp16.safetensors models/text_encoders/t5xxl_fp16.safetensors
 COPY models/text_encoders/clip_l.safetensors models/text_encoders/clip_l.safetensors
 COPY models/unet/flux1-dev.safetensors models/unet/flux1-dev.safetensors
-COPY models/vae/flux-ae.safetensors models/vae/flux-ae.safetensors
-COPY models/text_encoders/t5/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
-COPY models/unet/flux1-dev-fp8.safetensors models/unet/flux1-dev-fp8.safetensors
+COPY models/vae/ae.safetensors models/vae/flux-ae.safetensors
+COPY models/text_encoders/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
+COPY models/unet/flux1-dev-fp8-e4m3fn.safetensors models/unet/flux1-dev-fp8-e4m3fn.safetensors
 
 # Install CUSTOM runpod & requests
 RUN pip install requests
