@@ -61,6 +61,7 @@ COPY models/vae/ae.safetensors models/vae/flux-ae.safetensors
 COPY models/text_encoders/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
 COPY models/unet/flux1-dev-fp8-e4m3fn.safetensors models/unet/flux1-dev-fp8-e4m3fn.safetensors
 COPY models/loras/I2V-tittydrop-e26.safetensors models/loras/tittydrop.safetensors
+COPY models/loras/wan_tittydrop_v1_t2v_14b.safetensors models/loras/wan_tittydrop_v1_t2v_14b.safetensors
 
 # Install CUSTOM runpod & requests
 RUN pip install requests
