@@ -46,9 +46,9 @@ WORKDIR /comfyui
 RUN mkdir -p models/vae models/unet models/text_encoders models/clip_vision models/checkpoints models/loras
 
 # Copy local model files
-COPY models/loras/UltraRealistic_Lora_Project.safetensors models/loras/ultra_realistic_v1.safetensors
+COPY models/loras/UltraRealPhoto.safetensors models/loras/ultra_real_photo.safetensors
 COPY models/loras/Phlux.safetensors models/loras/phlux.safetensors
-COPY models/loras/iPhonePhoto2.safetensors models/loras/iPhonePhoto2.safetensors
+COPY models/loras/iphone-photo-V2-15000s.safetensors models/loras/iphone-photo-V2-15000s.safetensors
 COPY models/loras/amateurphoto-v6-forcu.safetensors models/loras/amateur_v6.safetensors
 COPY models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
 COPY models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
@@ -60,6 +60,7 @@ COPY models/unet/flux1-dev.safetensors models/unet/flux1-dev.safetensors
 COPY models/vae/ae.safetensors models/vae/flux-ae.safetensors
 COPY models/text_encoders/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
 COPY models/unet/flux1-dev-fp8-e4m3fn.safetensors models/unet/flux1-dev-fp8-e4m3fn.safetensors
+COPY models/loras/I2V-tittydrop-e26.safetensors models/loras/tittydrop.safetensors
 
 # Install CUSTOM runpod & requests
 RUN pip install requests
