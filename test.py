@@ -2,10 +2,10 @@ import os
 import cv2
 
 # The caption to write into each .txt file
-caption = "taby the fat stupid cat"
+caption = "my cat named taby"
 
 # Directory where the image files are located (update this to your directory path)
-directory = "/Users/rw/Downloads/taby"  # Replace with the actual path to your images
+directory = "/Users/rw/taby"  # Replace with the actual path to your images
 
 # Supported image file extensions
 image_extensions = (".jpg", ".jpeg", ".png")

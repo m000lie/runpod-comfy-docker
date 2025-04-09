@@ -123,15 +123,26 @@ def upload_images(images):
         name = image["name"]
         image_data = image["image"]
         subfolder_name = image.get(
-            "subfolder", ""
+            "subfolder", False
         )  # Default to empty string if not provided
-        blob = base64.b64decode(image_data)
+        # check if it's a text file
+        text = image.get("text", False)
 
-        # Prepare the form data
-        files = {
-            "image": (name, BytesIO(blob), "image/png"),
-            "overwrite": (None, "true"),
-        }
+        if text:
+            blob = image_data
+            files = {
+                "image": image_data,
+                "overwrite": (None, "true")
+
+            }
+        else: 
+            blob = base64.b64decode(image_data)
+
+            # Prepare the form data
+            files = {
+                "image": (name, BytesIO(blob), "image/png"),
+                "overwrite": (None, "true"),
+            }
         if subfolder_name:  # Only add subfolder if it's not empty
             files["subfolder"] = (None, subfolder_name)
 
@@ -297,7 +308,7 @@ def process_lora(outputs, job_id, lora_name, bucket_name):
     rp_upload.upload_file_to_bucket(lora_file_name, lora_path, bucket_name=bucket_name)
     return {
         "status": "success",
-        "message": "LORA training is done",
+        "message": lora_path,
     }
 
 
