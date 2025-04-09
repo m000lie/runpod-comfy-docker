@@ -66,6 +66,7 @@ COPY models/loras/pov_blowjob_v1.1.safetensors models/loras/pov_blowjob_v1.1.saf
 COPY models/loras/wan_cowgirl_v1.2.safetensors models/loras/wan_cowgirl_v1.2.safetensors
 COPY models/loras/wan_pov_missionary_i2v_v1.1.safetensors models/loras/wan_pov_missionary_i2v_v1.1.safetensors
 COPY models/loras/facials_epoch_50.safetensors models/loras/facials_epoch_50.safetensors
+COPY models/loras/wan_cumshot_i2v.safetensors models/loras/wan_cumshot_i2v.safetensors
 
 # Install CUSTOM runpod & requests
 RUN pip install requests
