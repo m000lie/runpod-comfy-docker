@@ -62,6 +62,9 @@ COPY models/text_encoders/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xx
 COPY models/unet/flux1-dev-fp8-e4m3fn.safetensors models/unet/flux1-dev-fp8-e4m3fn.safetensors
 COPY models/loras/I2V-tittydrop-e26.safetensors models/loras/tittydrop.safetensors
 COPY models/loras/wan_tittydrop_v1_t2v_14b.safetensors models/loras/wan_tittydrop_v1_t2v_14b.safetensors
+COPY models/loras/pov_blowjob_v1.1.safetensors models/loras/pov_blowjob_v1.1.safetensors
+COPY models/loras/wan_cowgirl_v1.2.safetensors models/loras/wan_cowgirl_v1.2.safetensors
+COPY models/loras/wan_pov_missionary_i2v_v1.1.safetensors models/loras/wan_pov_missionary_i2v_v1.1.safetensors
 
 # Install CUSTOM runpod & requests
 RUN pip install requests
