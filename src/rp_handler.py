@@ -8,6 +8,7 @@ import os
 import requests
 import base64
 from io import BytesIO
+from io import StringIO
 
 # Time to wait between API check attempts in milliseconds
 COMFY_API_AVAILABLE_INTERVAL_MS = 50
@@ -129,16 +130,12 @@ def upload_images(images):
         text = image.get("text", False)
 
         if text:
-            blob = image_data
             files = {
-                "image": image_data,
+                "image": (name, StringIO(image_data), "text/plain"),
                 "overwrite": (None, "true")
-
             }
         else: 
             blob = base64.b64decode(image_data)
-
-            # Prepare the form data
             files = {
                 "image": (name, BytesIO(blob), "image/png"),
                 "overwrite": (None, "true"),
