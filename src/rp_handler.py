@@ -9,6 +9,8 @@ import requests
 import base64
 from io import BytesIO
 from io import StringIO
+from PIL import Image
+import sys
 
 # Time to wait between API check attempts in milliseconds
 COMFY_API_AVAILABLE_INTERVAL_MS = 50
@@ -213,6 +215,64 @@ def base64_encode(img_path):
         return f"{encoded_string}"
 
 
+def convert_webp_to_gif(input_path, output_path=None, fps=16):
+    """
+    Convert a WebP image to GIF format while preserving quality.
+    Handles both single and multi-frame WebP files.
+    
+    Args:
+        input_path (str): Path to the input WebP file
+        output_path (str, optional): Path for the output GIF file. If not provided,
+                                   will use the same name as input with .gif extension
+        fps (int): Frames per second for the output GIF (default: 16)
+    """
+    try:
+        # Open the WebP image
+        with Image.open(input_path) as img:
+            # If output path is not specified, create one with .gif extension
+            if output_path is None:
+                output_path = os.path.splitext(input_path)[0] + '.gif'
+            
+            # Calculate frame duration in milliseconds (1000ms / fps)
+            duration = int(1000 / fps)
+            
+            # Prepare frames list
+            frames = []
+            
+            # Convert each frame
+            for frame in range(img.n_frames):
+                img.seek(frame)
+                
+                # Convert to RGB if the image is in RGBA mode
+                if img.mode in ('RGBA', 'LA'):
+                    background = Image.new('RGB', img.size, (255, 255, 255))
+                    background.paste(img, mask=img.split()[-1])
+                    frame_img = background
+                else:
+                    frame_img = img.convert('RGB')
+                
+                frames.append(frame_img)
+            
+            # Save as animated GIF
+            frames[0].save(
+                output_path,
+                save_all=True,
+                append_images=frames[1:],
+                duration=duration,
+                loop=0,  # 0 means loop forever
+                optimize=False
+            )
+            
+            print(f"Successfully converted {input_path} to {output_path}")
+            print(f"Number of frames: {len(frames)}")
+            print(f"FPS: {fps} (frame duration: {duration}ms)")
+            return output_path
+            
+    except Exception as e:
+        print(f"Error converting image: {str(e)}")
+        raise e
+
+
 def process_output_images(outputs, job_id, bucket_name):
     """
     This function takes the "outputs" from image generation and the job ID,
@@ -229,17 +289,6 @@ def process_output_images(outputs, job_id, bucket_name):
         dict: A dictionary with the status ('success' or 'error') and the message,
               which is either the URL to the image in the AWS S3 bucket or a base64
               encoded string of the image. In case of error, the message details the issue.
-
-    The function works as follows:
-    - It first determines the output path for the images from an environment variable,
-      defaulting to "/comfyui/output" if not set.
-    - It then iterates through the outputs to find the filenames of the generated images.
-    - After confirming the existence of the image in the output folder, it checks if the
-      AWS S3 bucket is configured via the BUCKET_ENDPOINT_URL environment variable.
-    - If AWS S3 is configured, it uploads the image to the bucket and returns the URL.
-    - If AWS S3 is not configured, it encodes the image in base64 and returns the string.
-    - If the image file does not exist in the output folder, it returns an error status
-      with a message indicating the missing image file.
     """
 
     # The path where ComfyUI stores the generated images
@@ -262,24 +311,32 @@ def process_output_images(outputs, job_id, bucket_name):
     # The image is in the output folder
     if os.path.exists(local_image_path):
         if os.environ.get("BUCKET_ENDPOINT_URL", False):
-            # URL to image in AWS S3
-            image = rp_upload.upload_image(job_id, local_image_path, bucket_name=bucket_name)
-            print(
-                "runpod-worker-comfy - the image was generated and uploaded to AWS S3"
-            )
-            
-            # Delete the local image file after successful upload to S3
+            # Convert WebP to GIF before uploading
             try:
-                os.remove(local_image_path)
-                print(f"runpod-worker-comfy - deleted local image file: {local_image_path}")
+                gif_path = convert_webp_to_gif(local_image_path)
+                print(f"runpod-worker-comfy - converted WebP to GIF: {gif_path}")
+                
+                # Upload the GIF to S3
+                image = rp_upload.upload_image(job_id, gif_path, bucket_name=bucket_name)
+                print("runpod-worker-comfy - the GIF was generated and uploaded to AWS S3")
+                
+                # Clean up both the original WebP and the generated GIF
+                try:
+                    os.remove(local_image_path)
+                    os.remove(gif_path)
+                    print(f"runpod-worker-comfy - deleted local files: {local_image_path} and {gif_path}")
+                except Exception as e:
+                    print(f"runpod-worker-comfy - warning: failed to delete local files: {str(e)}")
             except Exception as e:
-                print(f"runpod-worker-comfy - warning: failed to delete local image file: {str(e)}")
+                print(f"runpod-worker-comfy - error converting WebP to GIF: {str(e)}")
+                return {
+                    "status": "error",
+                    "message": f"Failed to convert WebP to GIF: {str(e)}",
+                }
         else:
             # base64 image
             image = base64_encode(local_image_path)
-            print(
-                "runpod-worker-comfy - the image was generated and converted to base64"
-            )
+            print("runpod-worker-comfy - the image was generated and converted to base64")
 
         return {
             "status": "success",
