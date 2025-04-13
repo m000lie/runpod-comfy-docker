@@ -248,9 +248,9 @@ def process_output_images(outputs, job_id, bucket_name):
     output_images = {}
 
     for node_id, node_output in outputs.items():
-        if "gifs" in node_output:
-            for gif in node_output["gifs"]:
-                output_images = os.path.join(gif["subfolder"], gif  ["filename"])
+        if "images" in node_output:
+            for image in node_output["images"]:
+                output_images = os.path.join(image["subfolder"], image["filename"])
 
     print(f"runpod-worker-comfy - image generation is done")
 
