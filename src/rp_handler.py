@@ -275,10 +275,8 @@ def convert_webp_to_gif(input_path, output_path=None, fps=16):
 
 def process_output_images(outputs, job_id, bucket_name):
     """
-    This function takes the "outputs" from image generation and the job ID,
-    then determines the correct way to return the image, either as a direct URL
-    to an AWS S3 bucket or as a base64 encoded string, depending on the
-    environment configuration.
+    This function takes the "outputs" from image generation and converts the WebP image
+    to a GIF format, then returns it as a base64 encoded string.
 
     Args:
         outputs (dict): A dictionary containing the outputs from image generation,
@@ -287,8 +285,8 @@ def process_output_images(outputs, job_id, bucket_name):
 
     Returns:
         dict: A dictionary with the status ('success' or 'error') and the message,
-              which is either the URL to the image in the AWS S3 bucket or a base64
-              encoded string of the image. In case of error, the message details the issue.
+              which is a base64 encoded string of the GIF image. In case of error,
+              the message details the issue.
     """
 
     # The path where ComfyUI stores the generated images
@@ -310,38 +308,33 @@ def process_output_images(outputs, job_id, bucket_name):
 
     # The image is in the output folder
     if os.path.exists(local_image_path):
-        if os.environ.get("BUCKET_ENDPOINT_URL", False):
-            # Convert WebP to GIF before uploading
+        try:
+            # Convert WebP to GIF
+            gif_path = convert_webp_to_gif(local_image_path)
+            print(f"runpod-worker-comfy - converted WebP to GIF: {gif_path}")
+            
+            # Convert GIF to base64
+            image = base64_encode(gif_path)
+            print("runpod-worker-comfy - the GIF was generated and converted to base64")
+            
+            # Clean up both the original WebP and the generated GIF
             try:
-                gif_path = convert_webp_to_gif(local_image_path)
-                print(f"runpod-worker-comfy - converted WebP to GIF: {gif_path}")
-                
-                # Upload the GIF to S3
-                image = rp_upload.upload_image(job_id, gif_path, bucket_name=bucket_name)
-                print("runpod-worker-comfy - the GIF was generated and uploaded to AWS S3")
-                
-                # Clean up both the original WebP and the generated GIF
-                try:
-                    os.remove(local_image_path)
-                    os.remove(gif_path)
-                    print(f"runpod-worker-comfy - deleted local files: {local_image_path} and {gif_path}")
-                except Exception as e:
-                    print(f"runpod-worker-comfy - warning: failed to delete local files: {str(e)}")
+                os.remove(local_image_path)
+                os.remove(gif_path)
+                print(f"runpod-worker-comfy - deleted local files: {local_image_path} and {gif_path}")
             except Exception as e:
-                print(f"runpod-worker-comfy - error converting WebP to GIF: {str(e)}")
-                return {
-                    "status": "error",
-                    "message": f"Failed to convert WebP to GIF: {str(e)}",
-                }
-        else:
-            # base64 image
-            image = base64_encode(local_image_path)
-            print("runpod-worker-comfy - the image was generated and converted to base64")
-
-        return {
-            "status": "success",
-            "message": image,
-        }
+                print(f"runpod-worker-comfy - warning: failed to delete local files: {str(e)}")
+                
+            return {
+                "status": "success",
+                "message": image,
+            }
+        except Exception as e:
+            print(f"runpod-worker-comfy - error converting WebP to GIF: {str(e)}")
+            return {
+                "status": "error",
+                "message": f"Failed to convert WebP to GIF: {str(e)}",
+            }
     else:
         print("runpod-worker-comfy - the image does not exist in the output folder")
         return {
