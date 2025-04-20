@@ -1,98 +1,59 @@
-# Stage 1: Base image with common dependencies
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
+# Use Debian bookworm-slim as the base image
+ARG BASE_DEBIAN=bookworm-slim
+FROM debian:${BASE_DEBIAN}
 
-# Prevents prompts from packages asking for user input during installation
-ENV DEBIAN_FRONTEND=noninteractive
-# Prefer binary wheels over source distributions for faster pip installations
-ENV PIP_PREFER_BINARY=1
-# Ensures output from python is printed immediately to the terminal without buffering
-ENV PYTHONUNBUFFERED=1 
-# Speed up some cmake builds
-ENV CMAKE_BUILD_PARALLEL_LEVEL=8
+# Set non-interactive frontend for apt
+ENV DEBIAN_FRONTEND noninteractive
 
-# Install Python, git and other necessary tools
-RUN apt-get update && apt-get install -y \
-    python3.10 \
-    python3-pip \
-    git \
-    wget \
-    libgl1 \
-    && ln -sf /usr/bin/python3.10 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip
+# Install dependencies
+RUN apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
+    curl \
+    net-tools \
+    openssh-server \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
 
-# Clean up to reduce image size
-RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
+# Download and install XAMPP
+ARG XAMPP_URL="https://sourceforge.net/projects/xampp/files/XAMPP Linux/8.2.12/xampp-linux-x64-8.2.12-0-installer.run"
+RUN curl -Lo xampp-linux-installer.run $XAMPP_URL && \
+    chmod +x xampp-linux-installer.run && \
+    ./xampp-linux-installer.run --mode unattended && \
+    rm xampp-linux-installer.run && \
+    ln -sf /opt/lampp/lampp /usr/bin/lampp
 
-# Copy requirements file and runpod package
-COPY runpod-1.7.8-CUSTOM.tar.gz /runpod.tar.gz
+# Configure XAMPP
+RUN sed -i.bak s'/Require local/Require all granted/g' /opt/lampp/etc/extra/httpd-xampp.conf && \
+    sed -i.bak s'/display_errors=Off/display_errors=On/g' /opt/lampp/etc/php.ini && \
+    mkdir /opt/lampp/apache2/conf.d && \
+    echo "IncludeOptional /opt/lampp/apache2/conf.d/*.conf" >> /opt/lampp/etc/httpd.conf && \
+    mkdir /www && \
+    ln -s /www /opt/lampp/htdocs
 
-# Install requirements, runpod, and comfy-cli
-RUN pip install --upgrade pip setuptools wheel
-RUN pip install /runpod.tar.gz
-RUN pip install comfy-cli
+# Configure SSH
+RUN echo 'root:root' | chpasswd && \
+    mkdir -p /var/run/sshd && \
+    sed -ri 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 
-# Install ComfyUI
-RUN /usr/bin/yes | comfy --workspace /comfyui install --cuda-version 11.8 --nvidia --version 0.3.26
+# Supervisor configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Change working directory to ComfyUI
-WORKDIR /comfyui
+# Copy supervisor config
+RUN echo "[supervisord]\n\
+nodaemon=true\n\
+\n\
+[program:sshd]\n\
+command=/usr/sbin/sshd -D\n\
+\n\
+[program:xampp]\n\
+command=/opt/lampp/lampp start\n\
+autorestart=true" > /etc/supervisor/conf.d/supervisord.conf
 
-# Install CUSTOM runpod & requests
-RUN pip install requests
+# Expose ports (HTTP, MySQL, SSH)
+EXPOSE 80 3306 22
 
+# Volumes for persistence
+VOLUME ["/var/log/mysql/", "/var/log/apache2/", "/www", "/opt/lampp/apache2/conf.d/"]
 
-# Support for the network volume
-ADD src/extra_model_paths.yaml ./
-
-# Go back to the root
-WORKDIR /
-
-# Add scripts
-ADD src/start.sh src/restore_snapshot.sh src/rp_handler.py test_input.json ./
-RUN chmod +x /start.sh /restore_snapshot.sh
-
-# Optionally copy the snapshot file
-ADD *snapshot*.json /
-
-# Restore the snapshot to install custom nodes
-RUN /restore_snapshot.sh
-
-# Start container
-CMD ["/start.sh"]
-
-# Stage 2: Download models
-FROM base as downloader
-
-# ARG HUGGINGFACE_ACCESS_TOKEN
-# ARG MODEL_TYPE
-
-# Change working directory to ComfyUI
-WORKDIR /comfyui
-
-# Create necessary directories
-RUN mkdir -p models/vae models/unet models/text_encoders models/clip_vision models/checkpoints models/loras
-
-# Copy local model files from the new location
-COPY /media/box/extra/models/loras/Another_Amateur_Lora.safetensors models/loras/ultra_realistic_v1.safetensors
-COPY /media/box/extra/models/loras/Phlux.safetensors models/loras/phlux.safetensors
-COPY /media/box/extra/models/loras/iphone-photo-V2-15000s.safetensors models/loras/iphone_photo_v2_15000s.safetensors
-COPY /media/box/extra/models/loras/amateurphoto-v6-forcu.safetensors models/loras/amateur_v6.safetensors
-COPY /media/box/extra/models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
-COPY /media/box/extra/models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
-COPY /media/box/extra/models/clip_vision/clip_vision_h.safetensors models/clip_vision/clip_vision_h.safetensors
-COPY /media/box/extra/models/vae/wan_2.1_vae.safetensors models/vae/wan_2.1_vae.safetensors
-COPY /media/box/extra/models/text_encoders/t5/t5xxl_fp16.safetensors models/text_encoders/t5xxl_fp16.safetensors
-COPY /media/box/extra/models/text_encoders/clip_l.safetensors models/text_encoders/clip_l.safetensors
-COPY /media/box/extra/models/unet/flux1-dev.safetensors models/unet/flux1-dev.safetensors
-COPY /media/box/extra/models/vae/flux-ae.safetensors models/vae/flux-ae.safetensors
-COPY /media/box/extra/models/text_encoders/t5/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
-COPY /media/box/extra/models/unet/flux1-dev-fp8-e4m3fn.safetensors models/unet/flux1-dev-fp8-e4m3fn.safetensors
-
-# Stage 3: Final image
-FROM base as final
-
-# Copy models from stage 2 to the final image
-COPY --from=downloader /comfyui/models /comfyui/models
-
-# Start container
-CMD ["/start.sh"]
+# Start supervisor
+CMD ["/usr/bin/supervisord", "-n"]

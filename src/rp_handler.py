@@ -273,10 +273,77 @@ def convert_webp_to_gif(input_path, output_path=None, fps=16):
         raise e
 
 
+def convert_webp_to_mp4(input_path, output_path=None, fps=16):
+    """
+    Convert a WebP image to MP4 format while preserving quality.
+    Handles both single and multi-frame WebP files.
+    
+    Args:
+        input_path (str): Path to the input WebP file
+        output_path (str, optional): Path for the output MP4 file. If not provided,
+                                   will use the same name as input with .mp4 extension
+        fps (int): Frames per second for the output MP4 (default: 16)
+    """
+    try:
+        # Open the WebP image
+        with Image.open(input_path) as img:
+            # If output path is not specified, create one with .mp4 extension
+            if output_path is None:
+                output_path = os.path.splitext(input_path)[0] + '.mp4'
+            
+            # Create a temporary directory for frames
+            temp_dir = os.path.join(os.path.dirname(output_path), 'temp_frames')
+            os.makedirs(temp_dir, exist_ok=True)
+            
+            # Save each frame as PNG
+            frames = []
+            try:
+                for frame in range(img.n_frames):
+                    img.seek(frame)
+                    frame_path = os.path.join(temp_dir, f'frame_{frame:04d}.png')
+                    
+                    # Convert to RGB if necessary
+                    if img.mode in ('RGBA', 'LA'):
+                        background = Image.new('RGB', img.size, (255, 255, 255))
+                        background.paste(img, mask=img.split()[-1])
+                        frame_img = background
+                    else:
+                        frame_img = img.convert('RGB')
+                    
+                    frame_img.save(frame_path)
+                    frames.append(frame_path)
+                
+                # Use ffmpeg to convert frames to MP4
+                frame_pattern = os.path.join(temp_dir, 'frame_%04d.png')
+                os.system(f'ffmpeg -y -framerate {fps} -i {frame_pattern} -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p {output_path}')
+                
+                print(f"Successfully converted {input_path} to {output_path}")
+                print(f"Number of frames: {len(frames)}")
+                print(f"FPS: {fps}")
+                
+                return output_path
+                
+            finally:
+                # Clean up temporary frames
+                for frame_path in frames:
+                    try:
+                        os.remove(frame_path)
+                    except:
+                        pass
+                try:
+                    os.rmdir(temp_dir)
+                except:
+                    pass
+            
+    except Exception as e:
+        print(f"Error converting image: {str(e)}")
+        raise e
+
+
 def process_output_images(outputs, job_id, bucket_name):
     """
     This function takes the "outputs" from image generation and converts the WebP image
-    to a GIF format, then returns it as a base64 encoded string.
+    to an MP4 format, then returns it as a base64 encoded string.
 
     Args:
         outputs (dict): A dictionary containing the outputs from image generation,
@@ -285,7 +352,7 @@ def process_output_images(outputs, job_id, bucket_name):
 
     Returns:
         dict: A dictionary with the status ('success' or 'error') and the message,
-              which is a base64 encoded string of the GIF image. In case of error,
+              which is a base64 encoded string of the MP4 video. In case of error,
               the message details the issue.
     """
 
@@ -309,31 +376,31 @@ def process_output_images(outputs, job_id, bucket_name):
     # The image is in the output folder
     if os.path.exists(local_image_path):
         try:
-            # Convert WebP to GIF
-            gif_path = convert_webp_to_gif(local_image_path)
-            print(f"runpod-worker-comfy - converted WebP to GIF: {gif_path}")
+            # Convert WebP to MP4
+            mp4_path = convert_webp_to_mp4(local_image_path)
+            print(f"runpod-worker-comfy - converted WebP to MP4: {mp4_path}")
             
-            # Convert GIF to base64
-            image = base64_encode(gif_path)
-            print("runpod-worker-comfy - the GIF was generated and converted to base64")
+            # Convert MP4 to base64
+            video = base64_encode(mp4_path)
+            print("runpod-worker-comfy - the MP4 was generated and converted to base64")
             
-            # Clean up both the original WebP and the generated GIF
+            # Clean up both the original WebP and the generated MP4
             try:
                 os.remove(local_image_path)
-                os.remove(gif_path)
-                print(f"runpod-worker-comfy - deleted local files: {local_image_path} and {gif_path}")
+                os.remove(mp4_path)
+                print(f"runpod-worker-comfy - deleted local files: {local_image_path} and {mp4_path}")
             except Exception as e:
                 print(f"runpod-worker-comfy - warning: failed to delete local files: {str(e)}")
                 
             return {
                 "status": "success",
-                "message": image,
+                "message": video,
             }
         except Exception as e:
-            print(f"runpod-worker-comfy - error converting WebP to GIF: {str(e)}")
+            print(f"runpod-worker-comfy - error converting WebP to MP4: {str(e)}")
             return {
                 "status": "error",
-                "message": f"Failed to convert WebP to GIF: {str(e)}",
+                "message": f"Failed to convert WebP to MP4: {str(e)}",
             }
     else:
         print("runpod-worker-comfy - the image does not exist in the output folder")

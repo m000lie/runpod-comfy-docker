@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     libgl1 \
+    ffmpeg \
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
@@ -46,20 +47,20 @@ WORKDIR /comfyui
 RUN mkdir -p models/vae models/unet models/text_encoders models/clip_vision models/checkpoints models/loras
 
 # Copy local model files
-COPY models/loras/UltraRealPhoto.safetensors models/loras/ultra_real_photo.safetensors
-COPY models/loras/Phlux.safetensors models/loras/phlux.safetensors
-COPY models/loras/iphone-photo-V2-15000s.safetensors models/loras/iphone-photo-V2-15000s.safetensors
-COPY models/loras/amateurphoto-v6-forcu.safetensors models/loras/amateur_v6.safetensors
+# COPY models/loras/UltraRealPhoto.safetensors models/loras/ultra_real_photo.safetensors
+# COPY models/loras/Phlux.safetensors models/loras/phlux.safetensors
+# COPY models/loras/iphone-photo-V2-15000s.safetensors models/loras/iphone-photo-V2-15000s.safetensors
+# COPY models/loras/amateurphoto-v6-forcu.safetensors models/loras/amateur_v6.safetensors
 COPY models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors models/unet/wan2.1_i2v_480p_14B_fp8_e4m3fn.safetensors
 COPY models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors models/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
 COPY models/clip_vision/clip_vision_h.safetensors models/clip_vision/clip_vision_h.safetensors
 COPY models/vae/wan_2.1_vae.safetensors models/vae/wan_2.1_vae.safetensors
-COPY models/text_encoders/t5xxl_fp16.safetensors models/text_encoders/t5xxl_fp16.safetensors
-COPY models/text_encoders/clip_l.safetensors models/text_encoders/clip_l.safetensors
-COPY models/unet/flux1-dev.safetensors models/unet/flux1-dev.safetensors
-COPY models/vae/ae.safetensors models/vae/flux-ae.safetensors
-COPY models/text_encoders/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
-COPY models/unet/flux1-dev-fp8-e4m3fn.safetensors models/unet/flux1-dev-fp8-e4m3fn.safetensors
+# COPY models/text_encoders/t5xxl_fp16.safetensors models/text_encoders/t5xxl_fp16.safetensors
+# COPY models/text_encoders/clip_l.safetensors models/text_encoders/clip_l.safetensors
+# COPY models/unet/flux1-dev.safetensors models/unet/flux1-dev.safetensors
+# COPY models/vae/ae.safetensors models/vae/flux-ae.safetensors
+# COPY models/text_encoders/t5xxl_fp8_e4m3fn.safetensors models/text_encoders/t5xxl_fp8_e4m3fn.safetensors
+# COPY models/unet/flux1-dev-fp8-e4m3fn.safetensors models/unet/flux1-dev-fp8-e4m3fn.safetensors
 COPY models/loras/I2V-tittydrop-e26.safetensors models/loras/tittydrop.safetensors
 COPY models/loras/wan_tittydrop_v1_t2v_14b.safetensors models/loras/wan_tittydrop_v1_t2v_14b.safetensors
 COPY models/loras/pov_blowjob_v1.1.safetensors models/loras/pov_blowjob_v1.1.safetensors
